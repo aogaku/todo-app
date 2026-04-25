@@ -1,46 +1,149 @@
 # Todo-app
-A simple todo list app built using HTML, CSS and Vanilla JavaScript.
 
-Live deployment: [Link](https://vaishnav-sh.github.io/todo-app/)
+HTML・CSS・バニラ JavaScript で作られたシンプルなタスク管理アプリです。  
+インストール不要、ブラウザだけで動作します。
 
-## Running the project
-To run this project locally you need to first fork it and then clone it<br>
-Using SSH:
-```
-git clone git@github.com:<your_github_username>/todo-app.git
-```
-Using HTTPS
-```
-git clone https://github.com/<your_github_username>/todo-app.git
-```
+🔗 **デモ**: [こちらから確認できます](https://vaishnav-sh.github.io/todo-app/)
 
-## Contributing to the project
-To make any contributions, follow the below steps and also don't forget to star this repository.<br>
-1. Fork this repository and clone it<br>
-Using SSH:
-```
-git clone git@github.com:<your_github_username>/todo-app.git
-```
-Using HTTPS
-```
-git clone https://github.com/<your_github_username>/todo-app.git
-```
-<br>
-
-2. Create a new branch and switch to it
-```
-cd todo-app
-git checkout -b <new_branch_name>
-```
-<br>
-
-3. Make the changes to the code on that branch, commit and then push to GitHub.
-```
-git push origin <new_branch_name>
-```
-4. Create a Pull Request for your changes.
-
-<br>
-
-## User Interface
 ![Todo-app UI](./design/todo-app.png)
+
+---
+
+## 目次
+
+- [機能一覧](#機能一覧)
+- [ローカルで動かす](#ローカルで動かす)
+- [使い方マニュアル](#使い方マニュアル)
+- [コントリビュート](#コントリビュート)
+
+---
+
+## 機能一覧
+
+| 機能 | 説明 |
+|------|------|
+| タスクの追加 | テキストを入力して追加ボタンで登録 |
+| タスクの完了 | チェックボタンで完了済みに移動 |
+| 重要マーク | スターボタンで重要タスクを識別 |
+| タスクの編集 | 編集ボタンでタスク名をその場で変更 |
+| タスクの削除 | ゴミ箱ボタンで個別削除 |
+| 全クリア | 「Clear All」でまとめて削除 |
+| 完了済みリスト | 折りたたんで表示・非表示を切り替え |
+| 進捗カウンター | 完了数 / 総数をリアルタイム表示 |
+| 達成メッセージ | 全タスク完了時に励ましのメッセージを表示 |
+| ダーク / ライトモード | 右上ボタンで切り替え |
+| 自動保存 | ブラウザの `localStorage` に自動保存、再読み込みしても消えない |
+
+---
+
+## ローカルで動かす
+
+ビルドツール・パッケージマネージャー不要です。
+
+**1. リポジトリをフォークしてクローン**
+
+SSH の場合:
+```bash
+git clone git@github.com:<your_github_username>/todo-app.git
+```
+
+HTTPS の場合:
+```bash
+git clone https://github.com/<your_github_username>/todo-app.git
+```
+
+**2. `index.html` をブラウザで開く**
+
+```bash
+cd todo-app
+open index.html        # macOS
+start index.html       # Windows
+xdg-open index.html    # Linux
+```
+
+---
+
+## 使い方マニュアル
+
+### タスクを追加する
+
+1. 画面上部の入力欄にタスク名を入力する
+2. **＋ボタン**（または `Enter` キー）を押すと一覧に追加される
+3. 空白のみの入力は無視される
+
+---
+
+### タスクを完了にする
+
+- タスク右側の **✓（チェックボタン）** をクリックすると、そのタスクが「Completed（完了済み）」セクションに移動する
+- 画面上部の進捗カウンター `(完了数/総数)` がリアルタイムで更新される
+- **全タスクを完了**すると画面下部に達成メッセージが表示される
+
+---
+
+### タスクを重要マークする
+
+- タスク右側の **★（スターボタン）** をクリックすると星が塗りつぶされ、重要タスクとして識別できる
+- もう一度クリックすると解除される
+- 完了済みタスクには重要マークは表示されない
+
+---
+
+### タスク名を編集する
+
+1. タスク右側の **✏️（編集ボタン）** をクリックすると入力欄がアクティブになる
+2. テキストを書き換えてフォーカスを外すと変更が反映される
+
+---
+
+### タスクを削除する
+
+- タスク右側の **🗑（ゴミ箱ボタン）** をクリックするとそのタスクが削除される
+- 完了済みリストのタスクも同様に削除できる
+
+---
+
+### 全タスクをまとめて削除する
+
+- タスク一覧上部の **「Clear All」ボタン** をクリックすると全タスクが削除される
+- タスクが 0 件のときはボタンが無効化される
+
+---
+
+### 完了済みタスクを表示 / 非表示にする
+
+- **「Completed (完了数/総数)」** セクションをクリックすると、完了済みタスクの一覧をアコーディオン形式で開閉できる
+
+---
+
+### ダーク / ライトモードを切り替える
+
+- 右上の **🌙（モード切り替えボタン）** をクリックするたびにダークモードとライトモードが切り替わる
+
+---
+
+### データの保存について
+
+- タスクの追加・完了・削除・編集を行うたびにブラウザの `localStorage` に自動保存される
+- ページを再読み込みしてもタスクは消えない
+- データはブラウザ・デバイスごとに保存されるため、別のブラウザやデバイスには同期されない
+
+---
+
+## コントリビュート
+
+バグ修正や機能追加は大歓迎です。以下の手順でお願いします。
+
+1. このリポジトリをフォーク＆クローン（上記参照）
+2. 作業用ブランチを作成して切り替え
+   ```bash
+   cd todo-app
+   git checkout -b <ブランチ名>
+   ```
+3. 変更を加えてコミット＆プッシュ
+   ```bash
+   git push origin <ブランチ名>
+   ```
+4. GitHub 上でプルリクエストを作成
+
+気に入ったら ⭐ をつけてもらえると嬉しいです！
