@@ -1,311 +1,605 @@
-// DEPENDENCIES
+const STORAGE_KEYS = {
+	todos: 'morningChecklistItems',
+	theme: 'morningChecklistTheme',
+	completedOpen: 'morningChecklistCompletedOpen',
+}
+
+const LEGACY_TODO_KEY = 'todos'
+const DEFAULT_MESSAGE = '下の候補をタップすると、すぐに追加できます。'
+
 let todos = []
-let task_count=0
-let task_completed_count=0
+let editingTodoId = null
+let completedOpen = false
+let messageTimerId = null
+let storageMessage = ''
 
-// SETTING THE DATE
 const myDate = document.getElementById('date')
-const myDay = document.getElementById('day');
+const myDay = document.getElementById('day')
+const todoForm = document.getElementById('todo-form')
+const itemInput = document.getElementById('enter-task')
+const todoList = document.getElementById('todo-list')
+const completedList = document.getElementById('completed-todo-list-items')
+const clearAllBtn = document.getElementById('clear-all-btn')
+const taskCounter = document.getElementById('task_counter')
+const appreciation = document.getElementById('appriciation')
+const totalCount = document.getElementById('total-count')
+const remainingCount = document.getElementById('remaining-count')
+const progressPercentage = document.getElementById('progress-percentage')
+const progressFill = document.getElementById('progress-fill')
+const progressText = document.getElementById('progress-text')
+const remainingSummary = document.getElementById('remaining-summary')
+const activeEmpty = document.getElementById('active-empty')
+const completedEmpty = document.getElementById('completed-empty')
+const completedToggle = document.getElementById('completed-toggle')
+const formMessage = document.getElementById('form-message')
+const templateList = document.getElementById('template-list')
+const themeToggle = document.getElementById('theme-toggle')
+const themeToggleLabel = document.getElementById('theme-toggle-label')
+const themeToggleIcon = document.getElementById('theme-toggle-icon')
 
-var dNames = new Array("日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日");
-var d = new Date();
-var currDate = d.getDate();
-var currMonth = d.getMonth() + 1;
-var currDay = d.getDay();
+init()
 
-myDate.innerHTML = currMonth + "月" + currDate + "日";
-myDay.innerHTML = dNames[currDay];
-var completedTasks = document.getElementById('completed-todo-list-title');
+function init() {
+	renderDate()
+	todos = loadTodos()
+	completedOpen = localStorage.getItem(STORAGE_KEYS.completedOpen) === 'true'
+	applyTheme(localStorage.getItem(STORAGE_KEYS.theme) === 'dark')
+	bindEvents()
+	renderAll()
 
-// click on completed section
-$('.completed_title').click(function(event) {
-    $('#completed_arrow').toggleClass('active');
-    $('#completed-todo-list-items').slideToggle(300);
-});
-
-// CACHED ELEMENTS
-const item = document.getElementById('enter-task');
-const todoList = document.getElementById('todo-list'); //ul
-const addBtn = document.getElementById('add-btn');
-const completedList = document.getElementById('completed-todo-list-items');
-const clearAllBtn = document.getElementById('clear-all-btn');
-const task_counter = document.getElementById("task_counter");
-const appriciation=document.getElementById("appriciation");
-
-// EVENT LISTENERS
-addBtn.addEventListener('click', addItem);
-todoList.addEventListener('click', deleteCheck);
-completedList.addEventListener('click', deleteCheck);
-clearAllBtn.addEventListener('click', clearAll);
-
-function isEmptyTodoList() {
-	if(JSON.parse(localStorage.getItem('todos')).length !== 0) {
-		clearAllBtn.removeAttribute("disabled");
+	if (storageMessage) {
+		showMessage(storageMessage, 'error')
 	} else {
-		clearAllBtn.setAttribute("disabled", true);
+		resetMessage()
 	}
 }
 
-isEmptyTodoList();
-
-// CREATE TODO ITEM
-const createToDoItem = (todo => {
-
-var todoDiv = document.createElement('div');
-todoDiv.classList.add('todo'); 
-todoDiv.id = `todo-${todo.id}`;  
-
-// create task item name    
-var newTodo = document.createElement("li");
-newTodo.innerText =  todo.text;
-newTodo.classList.add('todo-item');
-todoDiv.appendChild(newTodo);
-
-// button container
-var btnContainer = document.createElement('div');
-btnContainer.classList.add('btn-container');
-todoDiv.appendChild(btnContainer);
-
-// if the todo has not been completed, add check and star button
-if(!todo.isCompleted){
-	const impBtn = document.createElement('Button');
-	impBtn.innerHTML = todo.isImportant
-		? `<i id='imp-${todo.id}' class="fa fa-star imp"></i>`
-		: `<i id='imp-${todo.id}' class="fa fa-star-o imp"></i>`;
-	impBtn.classList.add('star');
-	impBtn.id = `star-${todo.id}`;
-	btnContainer.appendChild(impBtn);
-
-	const checkBtn = document.createElement('Button');
-	checkBtn.innerHTML = `<img id='done-${todo.id}' src="./icons/check.svg" alt="check icon" class="done">`;
-	checkBtn.classList.add('check');
-	checkBtn.id = `check-${todo.id}`;
-	btnContainer.appendChild(checkBtn);
-
-	impBtn.addEventListener('click', markAsImp);
-
+function bindEvents() {
+	todoForm.addEventListener('submit', handleAddSubmit)
+	templateList.addEventListener('click', handleTemplateClick)
+	todoList.addEventListener('click', handleTodoAction)
+	completedList.addEventListener('click', handleTodoAction)
+	todoList.addEventListener('keydown', handleEditInputKeydown)
+	clearAllBtn.addEventListener('click', clearAll)
+	completedToggle.addEventListener('click', toggleCompletedVisibility)
+	themeToggle.addEventListener('click', toggleTheme)
 }
 
-const deleteBtn = document.createElement('Button');
-deleteBtn.innerHTML = `<img id='trash-${todo.id}' src="./icons/delete.svg" alt="delete icon" class="trash">`;
-deleteBtn.classList.add('delete');
-deleteBtn.id = `delete-${todo.id}`;
-btnContainer.appendChild(deleteBtn);
-return todoDiv;
-})
+function renderDate() {
+	const dayNames = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日']
+	const today = new Date()
 
-// MOVE TODO TO COMPLETED LIST
-const moveToDone = (targetTodo) => {
-	// update completed value of todo
-	todos.forEach(todo => {
-		if(todo.id === targetTodo.id){
-			todo.isCompleted = true
-		}
-	})
-
-	// append todo item to completed list
-	completedList.appendChild(createToDoItem(targetTodo));
-
-	updateLocalStorage(todos)
+	myDate.textContent = `${today.getMonth() + 1}月${today.getDate()}日`
+	myDay.textContent = dayNames[today.getDay()]
 }
 
-let toggleImpBtn=false;
+function loadTodos() {
+	const storageCandidates = [STORAGE_KEYS.todos, LEGACY_TODO_KEY]
 
-// MARK TODO AS IMPORTANT
-const markAsImp = (e) => {
-	const targetId = e.currentTarget.id.replace('star-','');
+	for (const key of storageCandidates) {
+		const storedValue = localStorage.getItem(key)
 
-	const todoStar = document.getElementById(`imp-${targetId}`);
-	todos.forEach(todo => {
-		if(todo.id == targetId) {
-			todo.isImportant = !todo.isImportant;
-			toggleImpBtn = todo.isImportant;
-		}
-	})
-	if (toggleImpBtn) {
-		todoStar.classList.replace('fa-star-o', 'fa-star');
-	} else {
-		todoStar.classList.replace('fa-star', 'fa-star-o');
-	}
-	updateLocalStorage(todos);
-}
-
-// ADD TODO TO TODOS ARRAY AND LOCAL STORAGE 
-function addItem(e){
-	e.preventDefault();
-
-	// take input text
-	var newItem = document.getElementById('enter-task').value;
-
-	// return if input value is empty or contains only spaces
-	if(!newItem.trim()) return;
-
-	// create todo model
-	const todo = {
-		id: Math.random(),
-		text: newItem,
-		isCompleted: false,
-		isImportant: false
-	}
-
-	todos.push(todo)
-	task_count++;
-	task_counter.innerHTML=`(${task_completed_count}/${task_count})`;
-	console.log(task_count);
-	appriciation.classList.add("hide");
-
-	updateLocalStorage(todos)
-
-	isEmptyTodoList()
-
-	renderItem(todo)
-}
-
-// DISPLAY TODO ITEM
-function renderItem(todo) {
-    // create task item div
-    var todoDiv = document.createElement('div');
-    todoDiv.classList.add('todo');   
-
-    // create task item name    
-    var newTodo = document.createElement("li");
-    newTodo.classList.add('todo-item');
-    
-   
-    // creating input by govind
-    var input = document.createElement("INPUT");
-      input.setAttribute("type", "text");
-      input.classList.add('inputItem');
-      newTodo.appendChild(input);
-      input.setAttribute("value",todo.text)
-    
-    
-    
-    todoDiv.appendChild(newTodo);
-
-    // button container
-    var btnContainer = document.createElement('div');
-    btnContainer.classList.add('btn-container');
-    todoDiv.appendChild(btnContainer)
-    
-    // edit button by govind
-    const editBtn = document.createElement('Button');
-    editBtn.innerHTML = '<img src="./icons/edit.svg" alt="edit icon" class="edit">';
-    editBtn.classList.add('edit');
-    btnContainer.appendChild(editBtn);
-
-    editBtn.addEventListener('click',function() {
-        input.focus();
-    })
-
-	//mark important
-	const impBtn = document.createElement('Button');
-	impBtn.innerHTML = todo.isImportant ? '<img src="./icons/star-filled.svg" alt="mark as important" class="imp">':'<img src="./icons/star-dark.svg" alt="mark as important" class="imp">';
-	impBtn.classList.add('star');
-    btnContainer.appendChild(impBtn);
-
-    // check and delete
-    const checkBtn = document.createElement('Button');
-    checkBtn.innerHTML = '<img src="./icons/check.svg" alt="check icon" class="done">';
-    checkBtn.classList.add('check');
-    btnContainer.appendChild(checkBtn);
-
-    const deleteBtn = document.createElement('Button');
-    deleteBtn.innerHTML = '<img src="./icons/delete.svg" alt="delete icon" class="trash">';
-    deleteBtn.classList.add('delete');
-    btnContainer.appendChild(deleteBtn);
-
-    // append todo item to list
-		if(todo.isCompleted){
-			completedList.appendChild(createToDoItem(todo))
-		} else {
-			todoList.appendChild(createToDoItem(todo))
+		if (!storedValue) {
+			continue
 		}
 
-    // clear the textfield
-    item.value = "";
-}
+		try {
+			const parsedTodos = JSON.parse(storedValue)
 
-// CHECK AND REMOVE ITEM
-function deleteCheck(e) {
-	const item = e.target;
-	const targetId = e.target.id.replace('done-', '').replace('trash-', '')
-
-	// find todo in the todos array
-	todos.forEach(todo => {
-		if(todo.id == targetId){
-			// if being completed, move to completed list
-			if(item.classList[0] === 'done') {
-					popToDoItem(item)
-					moveToDone(todo)
-					task_completed_count++;
-					task_counter.innerHTML=`(${task_completed_count}/${task_count})`;
-					if(task_count==task_completed_count){
-						appriciation.classList.remove("hide");
-					}
-			
-			// if being deleted, delete
-			} else if (item.classList[0] === 'trash'){
-					popToDoItem(item)
-					deleteTodo(todo)
-					task_count--;
-					if(todo.isCompleted){
-						task_completed_count--;
-					}
-					task_counter.innerHTML=`(${task_completed_count}/${task_count})`;
-					if(task_count==task_completed_count && task_count!=0){
-						appriciation.classList.remove("hide");
-					}
+			if (!Array.isArray(parsedTodos)) {
+				throw new Error(`${key} is not an array`)
 			}
+
+			const normalizedTodos = parsedTodos
+				.map(normalizeTodo)
+				.filter((todo) => todo.text)
+
+			if (key === LEGACY_TODO_KEY) {
+				persistTodos(normalizedTodos)
+				localStorage.removeItem(LEGACY_TODO_KEY)
+			}
+
+			return normalizedTodos
+		} catch (error) {
+			console.error(`保存データ ${key} の読み込みに失敗しました。`, error)
+			storageMessage = '保存データを読み込めなかったため、新しいリストで開始しました。'
+			localStorage.removeItem(key)
 		}
+	}
+
+	return []
+}
+
+function normalizeTodo(todo) {
+	const text = normalizeText(
+		typeof todo.text === 'string'
+			? todo.text
+			: typeof todo.task === 'string'
+				? todo.task
+				: ''
+	)
+
+	const isCompleted = Boolean(todo.isCompleted ?? todo.completed)
+	const createdAt = Number.isFinite(Number(todo.createdAt)) ? Number(todo.createdAt) : Date.now()
+	const completedAt = Number.isFinite(Number(todo.completedAt)) ? Number(todo.completedAt) : null
+
+	return {
+		id: typeof todo.id === 'string' || typeof todo.id === 'number' ? String(todo.id) : createId(),
+		text,
+		isCompleted,
+		isImportant: Boolean(todo.isImportant ?? todo.important),
+		createdAt,
+		completedAt: isCompleted ? completedAt ?? createdAt : null,
+	}
+}
+
+function handleAddSubmit(event) {
+	event.preventDefault()
+	addTodo(itemInput.value)
+}
+
+function handleTemplateClick(event) {
+	const button = event.target.closest('.template-btn')
+
+	if (!button) {
+		return
+	}
+
+	addTodo(button.dataset.template || '')
+}
+
+function handleTodoAction(event) {
+	const actionButton = event.target.closest('button[data-action]')
+
+	if (!actionButton) {
+		return
+	}
+
+	const { action, id } = actionButton.dataset
+	const todo = findTodoById(id)
+
+	if (!todo) {
+		return
+	}
+
+	if (action === 'toggle-important') {
+		updateTodo(id, (currentTodo) => ({
+			...currentTodo,
+			isImportant: !currentTodo.isImportant,
+		}))
+		return
+	}
+
+	if (action === 'edit') {
+		editingTodoId = id
+		renderAll()
+		focusEditInput()
+		return
+	}
+
+	if (action === 'save') {
+		saveEditedTodo(id)
+		return
+	}
+
+	if (action === 'cancel') {
+		editingTodoId = null
+		renderAll()
+		resetMessage()
+		return
+	}
+
+	if (action === 'complete') {
+		updateTodo(id, (currentTodo) => ({
+			...currentTodo,
+			isCompleted: true,
+			completedAt: Date.now(),
+		}))
+		showMessage(`「${todo.text}」を確認済みにしました。`, 'success')
+		return
+	}
+
+	if (action === 'restore') {
+		updateTodo(id, (currentTodo) => ({
+			...currentTodo,
+			isCompleted: false,
+			completedAt: null,
+		}))
+		showMessage(`「${todo.text}」を未確認に戻しました。`, 'info')
+		return
+	}
+
+	if (action === 'delete') {
+		deleteTodo(id)
+	}
+}
+
+function handleEditInputKeydown(event) {
+	if (!event.target.classList.contains('todo-edit-input')) {
+		return
+	}
+
+	if (event.key === 'Enter') {
+		event.preventDefault()
+		saveEditedTodo(event.target.dataset.editInputId)
+	}
+
+	if (event.key === 'Escape') {
+		editingTodoId = null
+		renderAll()
+		resetMessage()
+	}
+}
+
+function addTodo(rawText) {
+	const text = normalizeText(rawText)
+
+	if (!text) {
+		showMessage('チェック項目を入力してください。', 'error')
+		itemInput.focus()
+		return
+	}
+
+	if (hasDuplicateText(text)) {
+		showMessage('同じ項目がすでにあります。', 'error')
+		itemInput.focus()
+		return
+	}
+
+	todos = [
+		...todos,
+		{
+			id: createId(),
+			text,
+			isCompleted: false,
+			isImportant: false,
+			createdAt: Date.now(),
+			completedAt: null,
+		},
+	]
+
+	itemInput.value = ''
+	editingTodoId = null
+	persistTodos(todos)
+	renderAll()
+	showMessage(`「${text}」を追加しました。`, 'success')
+	itemInput.focus()
+}
+
+function saveEditedTodo(id) {
+	const input = document.querySelector(`input[data-edit-input-id="${id}"]`)
+
+	if (!input) {
+		return
+	}
+
+	const updatedText = normalizeText(input.value)
+
+	if (!updatedText) {
+		showMessage('項目名を空にはできません。', 'error')
+		input.focus()
+		return
+	}
+
+	if (hasDuplicateText(updatedText, id)) {
+		showMessage('同じ項目名がすでにあります。', 'error')
+		input.focus()
+		return
+	}
+
+	editingTodoId = null
+	updateTodo(id, (todo) => ({
+		...todo,
+		text: updatedText,
+	}))
+	showMessage(`「${updatedText}」に更新しました。`, 'success')
+}
+
+function updateTodo(id, updateFn) {
+	todos = todos.map((todo) => {
+		if (todo.id !== id) {
+			return todo
+		}
+
+		return updateFn(todo)
 	})
+
+	persistTodos(todos)
+	renderAll()
 }
 
-// REMOVE TODO FROM CURRENT LIST
-function popToDoItem(item){
-    const id =  item.id.substring(item.id.length, item.id.lastIndexOf("-")+1);
-    const todo = document.getElementById(`todo-${id}`);
-    todo.remove();
-    return todo;
-}
+function deleteTodo(id) {
+	const todo = findTodoById(id)
 
-// DELETE TODO FROM LIST AND LOCALSTORAGE
-function deleteTodo(targetTodo){
-	todos = todos.filter(todo => todo.id != targetTodo.id)
-	updateLocalStorage(todos);
-    isEmptyTodoList();
+	if (!todo) {
+		return
+	}
+
+	todos = todos.filter((currentTodo) => currentTodo.id !== id)
+
+	if (editingTodoId === id) {
+		editingTodoId = null
+	}
+
+	persistTodos(todos)
+	renderAll()
+	showMessage(`「${todo.text}」を削除しました。`, 'info')
 }
 
 function clearAll() {
-
-	todos.forEach(todo => {
-		document.getElementById(`todo-${todo.id}`).remove();
-	})
-	
-	todos = [];
-	updateLocalStorage(todos);
-	task_count=0;
-	task_completed_count=0;
-	task_counter.innerHTML=`(${task_completed_count}/${task_count})`;
-	appriciation.classList.add("hide");
-	clearAllBtn.setAttribute("disabled",true);
-}
-
-// UPDATE LOCALSTORAGE WITH CURRENT TODO ARRAY
-function updateLocalStorage(todos){
-	localStorage.setItem('todos', JSON.stringify(todos))
-}
-
-// GET TODOS SAVED IN LOCALSTORAGE
-function getLocalTodos(){
-	if(localStorage.getItem('todos')){
-		todos = JSON.parse(localStorage.getItem('todos'))
+	if (!todos.length) {
+		return
 	}
 
-	todos.forEach(todo => {
-		renderItem(todo)
+	const confirmed = window.confirm('すべてのチェック項目を削除しますか？')
+
+	if (!confirmed) {
+		return
+	}
+
+	todos = []
+	editingTodoId = null
+	persistTodos(todos)
+	renderAll()
+	showMessage('チェック項目をリセットしました。', 'success')
+}
+
+function toggleCompletedVisibility() {
+	completedOpen = !completedOpen
+	localStorage.setItem(STORAGE_KEYS.completedOpen, String(completedOpen))
+	renderCompletedSection(getCompletedTodos())
+}
+
+function toggleTheme() {
+	const nextDarkMode = !document.body.classList.contains('dark-mode')
+	applyTheme(nextDarkMode)
+	localStorage.setItem(STORAGE_KEYS.theme, nextDarkMode ? 'dark' : 'light')
+}
+
+function applyTheme(isDarkMode) {
+	document.body.classList.toggle('dark-mode', isDarkMode)
+	themeToggle.setAttribute('aria-pressed', String(isDarkMode))
+	themeToggleLabel.textContent = isDarkMode ? '明るい表示' : '夜向け表示'
+	themeToggleIcon.textContent = isDarkMode ? '☀️' : '🌙'
+}
+
+function renderAll() {
+	const activeTodos = getActiveTodos()
+	const completedTodos = getCompletedTodos()
+
+	renderTodoList(todoList, activeTodos)
+	renderTodoList(completedList, completedTodos)
+	renderSummary(activeTodos, completedTodos)
+	renderCompletedSection(completedTodos)
+
+	activeEmpty.classList.toggle('hide', activeTodos.length > 0)
+	clearAllBtn.disabled = todos.length === 0
+	appreciation.classList.toggle('hide', !(todos.length > 0 && activeTodos.length === 0))
+}
+
+function renderTodoList(listElement, todoItems) {
+	listElement.innerHTML = ''
+
+	todoItems.forEach((todo) => {
+		listElement.appendChild(createTodoCard(todo))
 	})
 }
 
-// ON PAGE LOAD
-getLocalTodos()
+function renderSummary(activeTodos, completedTodos) {
+	const totalTodos = todos.length
+	const remainingTodos = activeTodos.length
+	const completedCount = completedTodos.length
+	const progress = totalTodos === 0 ? 0 : Math.round((completedCount / totalTodos) * 100)
+
+	totalCount.textContent = `${totalTodos}件`
+	remainingCount.textContent = `${remainingTodos}件`
+	progressPercentage.textContent = `${progress}%`
+	progressFill.style.width = `${progress}%`
+	taskCounter.textContent = `${completedCount} / ${totalTodos}`
+
+	if (totalTodos === 0) {
+		progressText.textContent = 'まずは忘れやすい持ち物を追加しましょう。'
+		remainingSummary.textContent = '項目を追加して、出発前チェックを始めましょう。'
+		return
+	}
+
+	if (remainingTodos === 0) {
+		progressText.textContent = 'すべて確認済みです。忘れ物なしで出発できます。'
+		remainingSummary.textContent = 'すべて確認できました。気持ちよく出発できます。'
+		return
+	}
+
+	progressText.textContent = `あと${remainingTodos}件確認すると準備完了です。`
+	remainingSummary.textContent = `優先度の高いものから、あと${remainingTodos}件確認しましょう。`
+}
+
+function renderCompletedSection(completedTodos) {
+	completedToggle.setAttribute('aria-expanded', String(completedOpen))
+	completedList.hidden = !completedOpen
+	completedEmpty.classList.toggle('hide', !completedOpen || completedTodos.length > 0)
+}
+
+function createTodoCard(todo) {
+	const todoCard = document.createElement('article')
+	todoCard.className = 'todo'
+
+	if (todo.isCompleted) {
+		todoCard.classList.add('todo--completed')
+	}
+
+	if (todo.isImportant && !todo.isCompleted) {
+		todoCard.classList.add('todo--important')
+	}
+
+	const content = document.createElement('div')
+	content.className = 'todo-content'
+
+	if (editingTodoId === todo.id && !todo.isCompleted) {
+		const editInput = document.createElement('input')
+		editInput.type = 'text'
+		editInput.value = todo.text
+		editInput.maxLength = 40
+		editInput.className = 'todo-edit-input'
+		editInput.dataset.editInputId = todo.id
+
+		const helpText = document.createElement('p')
+		helpText.className = 'todo-note'
+		helpText.textContent = 'Enter で保存 / Esc でキャンセル'
+
+		content.appendChild(editInput)
+		content.appendChild(helpText)
+	} else {
+		const titleRow = document.createElement('div')
+		titleRow.className = 'todo-title-row'
+
+		const title = document.createElement('p')
+		title.className = 'todo-text'
+		title.textContent = todo.text
+		titleRow.appendChild(title)
+
+		if (todo.isImportant && !todo.isCompleted) {
+			const badge = document.createElement('span')
+			badge.className = 'todo-badge'
+			badge.textContent = '優先'
+			titleRow.appendChild(badge)
+		}
+
+		const note = document.createElement('p')
+		note.className = 'todo-note'
+		note.textContent = todo.isCompleted
+			? '確認済みの項目です'
+			: todo.isImportant
+				? '優先して確認したい項目です'
+				: 'まだ確認していない項目です'
+
+		content.appendChild(titleRow)
+		content.appendChild(note)
+	}
+
+	const actions = document.createElement('div')
+	actions.className = 'btn-container'
+
+	getActionButtons(todo).forEach((button) => {
+		actions.appendChild(button)
+	})
+
+	todoCard.appendChild(content)
+	todoCard.appendChild(actions)
+
+	return todoCard
+}
+
+function getActionButtons(todo) {
+	if (editingTodoId === todo.id && !todo.isCompleted) {
+		return [
+			createActionButton(todo.id, 'save', '保存', 'action-btn--save'),
+			createActionButton(todo.id, 'cancel', 'キャンセル', 'action-btn--neutral'),
+		]
+	}
+
+	if (todo.isCompleted) {
+		return [
+			createActionButton(todo.id, 'restore', '未確認に戻す', 'action-btn--restore'),
+			createActionButton(todo.id, 'delete', '削除', 'action-btn--delete'),
+		]
+	}
+
+	return [
+		createActionButton(todo.id, 'toggle-important', todo.isImportant ? '★ 重要' : '☆ 重要', 'action-btn--important'),
+		createActionButton(todo.id, 'edit', '編集', 'action-btn--edit'),
+		createActionButton(todo.id, 'complete', '確認済み', 'action-btn--complete'),
+		createActionButton(todo.id, 'delete', '削除', 'action-btn--delete'),
+	]
+}
+
+function createActionButton(id, action, label, className) {
+	const button = document.createElement('button')
+	button.type = 'button'
+	button.className = `action-btn ${className}`
+	button.dataset.id = id
+	button.dataset.action = action
+	button.textContent = label
+	return button
+}
+
+function getActiveTodos() {
+	return todos
+		.filter((todo) => !todo.isCompleted)
+		.sort((firstTodo, secondTodo) => {
+			if (firstTodo.isImportant !== secondTodo.isImportant) {
+				return Number(secondTodo.isImportant) - Number(firstTodo.isImportant)
+			}
+
+			return firstTodo.createdAt - secondTodo.createdAt
+		})
+}
+
+function getCompletedTodos() {
+	return todos
+		.filter((todo) => todo.isCompleted)
+		.sort((firstTodo, secondTodo) => (secondTodo.completedAt || 0) - (firstTodo.completedAt || 0))
+}
+
+function persistTodos(nextTodos) {
+	localStorage.setItem(STORAGE_KEYS.todos, JSON.stringify(nextTodos))
+}
+
+function findTodoById(id) {
+	return todos.find((todo) => todo.id === id)
+}
+
+function hasDuplicateText(text, ignoredId = '') {
+	const normalizedTarget = normalizeForComparison(text)
+
+	return todos.some((todo) => todo.id !== ignoredId && normalizeForComparison(todo.text) === normalizedTarget)
+}
+
+function normalizeText(text) {
+	return text.replace(/\s+/g, ' ').trim()
+}
+
+function normalizeForComparison(text) {
+	return normalizeText(text).toLocaleLowerCase('ja-JP')
+}
+
+function createId() {
+	return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+function focusEditInput() {
+	window.requestAnimationFrame(() => {
+		const input = document.querySelector(`input[data-edit-input-id="${editingTodoId}"]`)
+
+		if (!input) {
+			return
+		}
+
+		input.focus()
+		input.select()
+	})
+}
+
+function showMessage(message, state = 'info') {
+	formMessage.textContent = message
+	formMessage.dataset.state = state
+
+	if (messageTimerId) {
+		window.clearTimeout(messageTimerId)
+	}
+
+	if (message !== DEFAULT_MESSAGE) {
+		messageTimerId = window.setTimeout(() => {
+			resetMessage()
+		}, 2600)
+	}
+}
+
+function resetMessage() {
+	if (messageTimerId) {
+		window.clearTimeout(messageTimerId)
+	}
+
+	messageTimerId = null
+	formMessage.textContent = DEFAULT_MESSAGE
+	formMessage.dataset.state = 'info'
+}
