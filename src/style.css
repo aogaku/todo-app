@@ -4,16 +4,18 @@
   box-sizing: border-box;
 }
 
-@font-face {
-  font-family: nasalization;
-  src: url("../font/nasalization-rg.otf");
-}
-
 body {
-  background: #2f2f2f;
-  color: white;
+  background: #FFF8F0;
+  color: #374151;
   font-family: "Open Sans", sans-serif;
   margin: 0;
+  min-height: 100vh;
+}
+
+/* ── ダークモード ── */
+body.dark-mode {
+  background: #1F2937;
+  color: #F9FAFB;
 }
 
 .Mode {
@@ -22,13 +24,11 @@ body {
 }
 
 .Change {
-  border: 2px;
-  border-radius: 3px;
-}
-
-.light {
-  background-color: white;
-  color: black;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px;
 }
 
 h1,
@@ -50,36 +50,59 @@ li {
 }
 
 .title {
-  font-family: nasalization;
-  font-size: 3.5rem;
-  letter-spacing: 10px;
+  font-family: "Open Sans", sans-serif;
+  font-size: 2.8rem;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: #F59E0B;
 }
 
 .today {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 700;
+  color: #F59E0B;
 }
 
 #date {
-  font-family: nasalization;
+  font-family: "Open Sans", sans-serif;
+  font-size: 1.8rem;
   margin: 0;
 }
 
 #day {
-  font-family: nasalization;
+  font-family: "Open Sans", sans-serif;
   font-size: 1rem;
   margin: 0;
-  text-transform: uppercase;
+  color: #9CA3AF;
+  font-weight: 600;
 }
 
+body.dark-mode #day {
+  color: #9CA3AF;
+}
+
+/* ── 入力フォーム ── */
 #enter-task {
-  background: rgb(41, 41, 41);
+  background: #FFFFFF;
   display: block;
-  border: none;
-  color: seashell;
+  border: 2px solid #FDE68A;
+  border-radius: 12px 0 0 12px;
+  color: #374151;
   font-size: 1rem;
-  padding: 1.25em 4em 1.25em 0.5em;
+  padding: 1em 3.5em 1em 1em;
   width: 100%;
+  transition: border-color 0.2s;
+}
+
+#enter-task:focus {
+  outline: none;
+  border-color: #F59E0B;
+}
+
+body.dark-mode #enter-task {
+  background: #374151;
+  border-color: #4B5563;
+  color: #F9FAFB;
 }
 
 .form {
@@ -87,46 +110,70 @@ li {
 }
 
 #add-btn {
-  background: transparent;
+  background: #F59E0B;
   border: 0;
+  border-radius: 0 12px 12px 0;
   position: absolute;
   right: 0;
-  top: 6px;
+  top: 0;
+  height: 100%;
+  width: 48px;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
+#add-btn:hover {
+  background: #D97706;
+}
+
+/* ── 区切り線 ── */
 .bar {
-  background: rgb(41, 41, 41);
-  height: 1px;
+  background: #FDE68A;
+  height: 2px;
   margin: 1em 0;
   width: 100%;
+  border-radius: 2px;
 }
 
+body.dark-mode .bar {
+  background: #374151;
+}
+
+/* ── 全て削除ボタン ── */
 .clear-container {
   margin-bottom: 20px;
   position: relative;
   display: flex;
-  justify-content: right;
+  justify-content: flex-end;
 }
 
 .clear-all-btn {
-  padding: 0.4em 0.5em;
-  border-radius: 7px;
+  padding: 0.4em 1em;
+  border-radius: 8px;
   border: none;
   font-weight: 600;
-  font-size: 1em;
-  background-color: #FFFFFF;
+  font-size: 0.9em;
+  background-color: #FEE2E2;
+  color: #B91C1C;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
-.light-clear-btn {
-  padding: 0.4em 0.5em;
-  border-radius: 7px;
-  border: none;
-  font-weight: 600;
-  font-size: 1em;
-  color: #FFFFFF;
-  background-color: #292929;
+.clear-all-btn:hover:not(:disabled) {
+  background-color: #FECACA;
 }
 
+.clear-all-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dark-clear-btn {
+  background-color: #7F1D1D !important;
+  color: #FEE2E2 !important;
+}
+
+/* ── タスク一覧 ── */
 #todo-list {
   list-style: none;
   margin: 0;
@@ -135,116 +182,115 @@ li {
 
 .todo {
   align-items: center;
-  background: rgb(41, 41, 41);
-  display: block;
+  background: #FFFFFF;
   display: flex;
-  border: 1px solid rgb(94, 94, 94);
-  color: seashell;
+  border-left: 4px solid #F59E0B;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+  color: #374151;
   font-size: 1rem;
   font-weight: 500;
   justify-content: space-between;
-  padding: 1em 0.5em;
+  padding: 0.9em 0.75em;
   width: 100%;
+  margin-bottom: 10px;
+  transition: box-shadow 0.2s;
 }
 
+.todo:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+body.dark-mode .todo {
+  background: #374151;
+  color: #F9FAFB;
+  border-left-color: #F59E0B;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* ── アイコンボタン ── */
 .check,
 .delete,
 .edit,
 .star {
   background: transparent;
   border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 4px;
+  transition: background 0.15s;
 }
 
+.check:hover  { background: #D1FAE5; }
+.delete:hover { background: #FEE2E2; }
+.edit:hover   { background: #DBEAFE; }
+.star:hover   { background: #FEF3C7; }
+
+.imp {
+  font-size: 1.1rem;
+  color: #D1D5DB;
+  pointer-events: none;
+}
+
+.fa-star.imp {
+  color: #F59E0B;
+}
+
+/* ── 編集用インライン入力 ── */
 .inputItem {
   background: transparent;
   border: none;
-  color: white;
-  font-family: Lato, sans-serif;
-  font-size: 18px;
+  color: #374151;
+  font-family: "Open Sans", sans-serif;
+  font-size: 1rem;
   margin: 0;
-  padding: 10px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.15s;
 }
 
-@media (max-width: 600px) {
-  header {
-    margin: 1em 0;
-  }
-
-  .title {
-    font-size: 3rem;
-  }
-
-  .today {
-    font-size: 1.5rem;
-  }
-
-  li {
-    width: 87%;
-    word-wrap: break-word;
-  }
-
-  .btn-container {
-    width: 15%;
-  }
+.inputItem:focus {
+  outline: none;
+  background: #FEF9EE;
+  border: 1px solid #FDE68A;
 }
 
+body.dark-mode .inputItem {
+  color: #F9FAFB;
+}
+
+body.dark-mode .inputItem:focus {
+  background: #4B5563;
+  border-color: #6B7280;
+}
+
+/* ── 確認済み（完了）セクション ── */
 .completed-todo-list .todo {
   text-decoration: line-through;
+  border-left-color: #10B981;
+  opacity: 0.75;
 }
 
 .completed_title {
-  font-size: 28px;
-  font-weight: bold;
-  /* position: relative; */
-  /* padding-left: 40px; */
-  /* cursor: pointer; */
-  /* margin: 10px 0px; */
-}
-
-
-/* .completed-todo-list-title::before,
-.completed-todo-list-title::after {
-
-    content: "";
-    background-color: white;
-    border-radius: 5px;
-    position: absolute;
-    transition: all 0.3s ease 0s;
-    top: 42%;
-    width: 20px;
-    height: 7px;
-} */
-/* 
-.completed-todo-list-title:before {
-    transform: rotate(40deg);
-    left: 0;
-}
-
-.completed-todo-list-title::after {
-    transform: rotate(-40deg);
-    left: 12px;
-}
-
-.completed-todo-list-title.active::before, .completed-todo-list-title.active::after {
-    background-color: white;
-}
-
-.completed-todo-list-title.active::before {
-    transform: rotate(-40deg);
-}
-
-.completed-todo-list-title.active::after {
-    transform: rotate(40deg);
-} */
-
-/* Completed section styling */
-.light-arrow {
-  color: black !important;
-}
-
-.completed_title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #374151 !important;
   box-shadow: none !important;
   outline: none !important;
+  display: flex;
+  align-items: center;
+}
+
+body.dark-mode .completed_title {
+  color: #F9FAFB !important;
+}
+
+.dark-arrow {
+  color: #F9FAFB !important;
+}
+
+#completed_arrow {
+  transition: transform 0.3s;
 }
 
 #completed_arrow.active {
@@ -255,18 +301,59 @@ li {
   display: none;
   list-style: none;
   margin: 0;
-  padding-top: 10px;
   padding: 0;
+  padding-top: 4px;
 }
-.hide{
+
+/* ── 達成メッセージ ── */
+.hide {
   display: none;
 }
+
 .appriciation_msg {
-  color: #ffffff84;
-  font-weight: bold;
+  color: #059669;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: #D1FAE5;
+  border-radius: 10px;
+  text-align: center;
 }
-#task_counter{
-  position: relative;
-  left: 200px;
-  bottom: 42px;
+
+body.dark-mode .appriciation_msg {
+  background: #065F46;
+  color: #A7F3D0;
+}
+
+/* ── 進捗カウンター ── */
+#task_counter {
+  margin-left: auto;
+  font-size: 0.9rem;
+  color: #9CA3AF;
+  font-weight: 600;
+}
+
+/* ── レスポンシブ ── */
+@media (max-width: 600px) {
+  header {
+    margin: 1em 0;
+  }
+
+  .title {
+    font-size: 2.2rem;
+  }
+
+  .today {
+    font-size: 1.4rem;
+  }
+
+  li {
+    width: 87%;
+    word-wrap: break-word;
+  }
+
+  .btn-container {
+    width: 15%;
+  }
 }

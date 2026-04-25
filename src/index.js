@@ -7,24 +7,13 @@ let task_completed_count=0
 const myDate = document.getElementById('date')
 const myDay = document.getElementById('day');
 
-var dNames = new Array("sunday","monday", "tuesday", "wednesday", "thursday", "friday", "saturday"); 
-var mNames = new Array("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
+var dNames = new Array("日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日");
 var d = new Date();
 var currDate = d.getDate();
-var currMonth = d.getMonth();
+var currMonth = d.getMonth() + 1;
 var currDay = d.getDay();
-var sup = "";
-if(currDate === 1 || currDate === 21 || currDate === 31) {
-    sup = "st";
-} else if(currDate === 2 || currDate === 22) {
-    sup = "nd";
-} else if(currDate === 3 || currDate === 23) {
-    sup = "rd";
-} else {
-    sup = "th";
-}
 
-myDate.innerHTML = currDate + "<sup>" + sup + "</sup>" + " " + mNames[currMonth];
+myDate.innerHTML = currMonth + "月" + currDate + "日";
 myDay.innerHTML = dNames[currDay];
 var completedTasks = document.getElementById('completed-todo-list-title');
 
@@ -80,11 +69,9 @@ todoDiv.appendChild(btnContainer);
 // if the todo has not been completed, add check and star button
 if(!todo.isCompleted){
 	const impBtn = document.createElement('Button');
-	if(todo.isImportant) {
-		impBtn.innerHTML = `<img id='imp-${todo.id}' src= "./icons/star-filled.svg" alt="mark as important" class="imp">`;
-	} else {
-		impBtn.innerHTML = `<img id='imp-${todo.id}' src= "./icons/star-dark.svg" alt="mark as important" class="imp">`;
-	}
+	impBtn.innerHTML = todo.isImportant
+		? `<i id='imp-${todo.id}' class="fa fa-star imp"></i>`
+		: `<i id='imp-${todo.id}' class="fa fa-star-o imp"></i>`;
 	impBtn.classList.add('star');
 	impBtn.id = `star-${todo.id}`;
 	btnContainer.appendChild(impBtn);
@@ -126,7 +113,7 @@ let toggleImpBtn=false;
 
 // MARK TODO AS IMPORTANT
 const markAsImp = (e) => {
-	const targetId = e.target.id.replace('imp-','');
+	const targetId = e.currentTarget.id.replace('star-','');
 
 	const todoStar = document.getElementById(`imp-${targetId}`);
 	todos.forEach(todo => {
@@ -135,7 +122,11 @@ const markAsImp = (e) => {
 			toggleImpBtn = todo.isImportant;
 		}
 	})
-	todoStar.src = toggleImpBtn ? "./icons/star-filled.svg" : "./icons/star-dark.svg";
+	if (toggleImpBtn) {
+		todoStar.classList.replace('fa-star-o', 'fa-star');
+	} else {
+		todoStar.classList.replace('fa-star', 'fa-star-o');
+	}
 	updateLocalStorage(todos);
 }
 
